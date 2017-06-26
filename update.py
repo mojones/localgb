@@ -3,30 +3,11 @@ from io import StringIO
 from tqdm import tqdm
 import time
 from multiprocessing import Pool
-
-divisions = ['phg', 'syn']
-
-ftp = FTP('ftp.ncbi.nlm.nih.gov')
-ftp.login()
-ftp.cwd('genbank')
+import os
 
 
-class FtpDownloadTracker:
-    read = 0
 
-    def __init__(self, output, pbar):
-        self.output = output
-        self.pbar = pbar
-
-    def handle(self, block):
-        self.pbar.update(len(block))
-        # self.read += 8192
-        # if self.read % 10 == 0:
-        #     print('now at {} '.format(self.read))
-        self.output.write(block)
-
-
-def need_to_update():
+def need_to_update_release():
     """
     Check whether the user currently has the latest GB release (in which case
     we only need to download the daily updates) or whether they have an old
@@ -56,13 +37,34 @@ def need_to_update():
         return True
 
 
+def get_daily_updates():
+    ftp.cwd('daily-nc')
+
+    files_to_download = []
+    for filename, file_info in ftp.mlsd():
+        if filename.startswith('nc') and filename.endswith('.flat.gz'):
+            print('checking ' + filename)
+            if os.path.exists(filename):
+                print("already got {}".format(filename))
+            else:
+                files_to_download.append((filename, file_info))
+    with tqdm(
+        files_to_download,
+        unit='files',
+        desc='Downloading {} files'.format(len(files_to_download))
+    ) as file_pbar:
+        for f in file_pbar:
+            download(f)
+
+
 def download(myfile):
     filename, file_info = myfile
     with tqdm(
                 total=int(file_info['size']),
                 desc=filename,
                 unit='bytes',
-                unit_scale=True
+                unit_scale=True,
+                leave=False
               ) as pbar:
         with open(filename, 'wb') as output:
             def handle_block(block):
@@ -77,7 +79,7 @@ def do_update_release():
         file_division = filename[2:5]
         if filename.startswith('gb') and file_division in divisions:
             files_to_download.append((filename, file_info))
-    pool = Pool(4)
+    # pool = Pool(4)
     with tqdm(
         files_to_download,
         unit='files',
@@ -86,12 +88,27 @@ def do_update_release():
         for f in file_pbar:
             download(f)
 
-        # with open(filename, 'wb') as output:
-        #     ftp.retrbinary('RETR ' + filename, output.write)
-
-    # with open('GB_Release_Number', 'wb') as output:
-    #     ftp.retrbinary('RETR GB_Release_Number', output.write)
+    with open('GB_Release_Number', 'wb') as output:
+        ftp.retrbinary('RETR GB_Release_Number', output.write)
 
 
-if need_to_update():
+def delete_old_files():
+    print('Warning, about to delete files from your old release')
+    print('Hit Ctrl+C to prevent this from happening...')
+
+    for filename in os.listdir('.'):
+        if filename.endswith('.gz'):
+            os.remove(filename)
+
+
+divisions = ['phg', 'syn']
+
+ftp = FTP('ftp.ncbi.nlm.nih.gov')
+ftp.login()
+ftp.cwd('genbank')
+
+if need_to_update_release():
+    delete_old_files()
     do_update_release()
+
+get_daily_updates()
