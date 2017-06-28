@@ -101,4 +101,10 @@ ENV/
 .mypy_cache/
 
 # gzipped files
-.gz
+*.gz
+
+# python pickles
+*.p
+
+# ncbi taxdump files
+*.dmp
