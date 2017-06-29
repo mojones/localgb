@@ -70,6 +70,9 @@ You get the idea. If you're feeling lucky/lazy, you can also search for a taxid 
 The interface for this is a bit more complicated. For reasons of flexibility, I made it so that you **have to** tell it:
 
 - a feature type that you're looking for
+
+and optionally:
+
 - a qualifier (i.e. a property of a feature) that you want to check
 - a list of possible values that the qualifier can take
 
@@ -104,6 +107,29 @@ Finally, I also have to specify what I want to do with the records/features that
 - `--fasta-features` : write the feature sequences out in FASTA format to the output file
 - `--fasta-protein-features` : write the feature protein sequences out in FASTA format to the output file. This only works for features that have a `translation` qualifier, which AFAIK is only **CDS** features. 
 - `--dump-genbank` : write out the records that contain matching features in genbank format to the output file. Of course, this file can then be the input file for a different query. 
+
+So, a complete command line will look like this...
+
+```
+# search for records containing enolase coding sequences and write the resulting records to enolase.gb
+python query.py --type CDS --qualifier product --terms enolase --output enolase.gb --files *.seq --dump-genbank
+```
+While the query is running we get a similar progress bar to the download stage so we can estimate how long it's going to take.
+
+If we want to do the same search but get FASTA records for the enolase coding sequences themselves, we will pass `--fasta-features` instead of `--dump-genbank`:
+
+```
+# search for records containing enolase coding sequences and write the resulting records to enolase.gb
+python query.py --type CDS --qualifier product --terms enolase --output enolase.fasta --files *.seq --fasta-features
+```
+Note that with the above command we get the sequence of **just the features**, not the entire records. Since the feature type here is **CDS**, which normally have **translation** qualifiers, I can also get the protein sequences:
+
+```
+# search for records containing enolase coding sequences and write the resulting records to enolase.gb
+python query.py --type CDS --qualifier product --terms enolase --output enolase_proteins.fasta --files *.seq --fasta-protein-features
+```
+
+
 
 TODO
 - taxid stuff
