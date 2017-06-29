@@ -8,6 +8,10 @@ import pickle
 import collections
 
 def need_to_update_release():
+    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+    ftp.login()
+    ftp.cwd('genbank')
+
     """
     Check whether the user currently has the latest GB release (in which case
     we only need to download the daily updates) or whether they have an old
@@ -38,6 +42,10 @@ def need_to_update_release():
 
 
 def get_daily_updates():
+    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+    ftp.login()
+    ftp.cwd('genbank')
+
     ftp.cwd('daily-nc')
 
     files_to_download = []
@@ -61,7 +69,7 @@ def get_daily_updates():
             desc='Downloading {} files'.format(len(files_to_download))
         ) as file_pbar:
             for f in file_pbar:
-                download(f)
+                download(f, ftp)
 
 def build_ncbi_names_dicts():
     names = open("names.dmp")
@@ -108,7 +116,7 @@ def get_taxdump():
 
     for filename, file_info in ftp.mlsd():
         if filename == 'taxdump.tar.gz':
-            download((filename, file_info))
+            download((filename, file_info), ftp)
 
     with tqdm(total=3, desc='extracting files from taxdump') as pbar:
         logging.debug('extracting files from taxdump')
@@ -134,7 +142,12 @@ def get_taxdump():
 
 
 
-def download(myfile):
+def download(myfile, ftp):
+    """
+    Download myfile from the given ftp connection and draw a progress bar while
+    doing it. myfile is a tuple of (filename, file_info) as returned by
+    ftp.mlsd().
+    """
     filename, file_info = myfile
     with tqdm(
                 total=int(file_info['size']),
@@ -150,14 +163,18 @@ def download(myfile):
             ftp.retrbinary('RETR ' + filename, handle_block)
 
 
-def do_update_release():
-    logging.debug('looking for divisions: {}'.format(args.divisions))
+def do_update_release(divisions):
+    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+    ftp.login()
+    ftp.cwd('genbank')
+
+    logging.debug('looking for divisions: {}'.format(divisions))
     files_to_download = []
     for filename, file_info in ftp.mlsd():
         file_division = filename[2:5]
         if (
             filename.startswith('gb')
-            and file_division.upper() in args.divisions
+            and file_division.upper() in divisions
         ):
             files_to_download.append((filename, file_info))
 
@@ -173,7 +190,7 @@ def do_update_release():
         desc='Downloading {} files'.format(len(files_to_download))
     ) as file_pbar:
         for f in file_pbar:
-            download(f)
+            download(f, ftp)
 
     with open('GB_Release_Number', 'wb') as output:
         ftp.retrbinary('RETR GB_Release_Number', output.write)

@@ -1,7 +1,7 @@
 import logging
 import argparse
 from argparse import RawTextHelpFormatter
-
+from ftplib import FTP
 import localgb
 
 
@@ -63,13 +63,10 @@ elif args.verbosity > 0:
     logging.basicConfig(level=logging.DEBUG)
 
 
-ftp = FTP('ftp.ncbi.nlm.nih.gov')
-ftp.login()
-ftp.cwd('genbank')
 
 if localgb.need_to_update_release() or args.force:
     localgb.delete_old_files()
-    localgb.do_update_release()
+    localgb.do_update_release(args.divisions)
 
 localgb.get_daily_updates()
 localgb.get_taxdump()
