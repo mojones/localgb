@@ -99,7 +99,7 @@ CDS             join(<1..100,165..311,373..463,532..>631)
        
 ... rest of the genbank file ...
 ```
-To run the script, I also have to give a `--output` to specify an output file and a `--files` to specify the genbank files (which will normally be `--files *.seq.gz` if I havent' extracted the files, or `--files *.seq` if I have).
+To run the script, I also have to give a `--output` to specify an output file and a `--files` to specify the genbank files. Normally this will be `--files *.seq.gz *.flat.gz` if I havent' extracted the files, or `--files *.seq *.flat` if I have).
 
 Finally, I also have to specify what I want to do with the records/features that I find. So far there are three options:
 
