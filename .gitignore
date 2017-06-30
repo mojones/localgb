@@ -102,6 +102,8 @@ ENV/
 
 # gzipped files
 *.gz
+*.seq
+*.flat
 
 # python pickles
 *.p
