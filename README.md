@@ -132,7 +132,7 @@ python query.py --type CDS --qualifier product --terms enolase --output enolase_
 If we're not sure what feature or qualifier we should be looking for, we can run `dump_features.py` on some genbank files (compressed or not) and it will tell us what the most common features were and what the most common qualifiers were for those features:
 
 ```
-python dump_features.py *.seq.gz`
+python dump_features.py *.seq.gz
 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 22/22 [01:37<00:00,  3.87s/files]
 source : 1173339
 	db_xref : 1531335
@@ -163,7 +163,6 @@ If we want to find all features that match a particular type, and don't care abo
 ```
 # extract all transfer RNA sequences from molluscs
 python query.py --type tRNA --output tRNAs.fasta --files *.seq --fasta-features --taxid-file molluscs.txt 
-looking for "trna"
 ```
 
 ### Finding genes with multiple synonyms
@@ -196,7 +195,9 @@ This saves a bunch of time as for the real searches we only have to look at the 
 
 The **host** qualifier belongs to the **source** feature, so we'll search for that but not put in anything for `--terms` as we don't care what the host actually is:
 
-`python query.py --type source --qualifier host  --dump-genbank --files *.seq --output with_host.gb`
+```
+python query.py --type source --qualifier host  --dump-genbank --files *.seq --output with_host.gb
+```
 
 of course, if we do care what the host qualifier is, we just add it as a term:
 
@@ -226,6 +227,9 @@ exon.9.fasta:164
 ```
 
 Now we go and look at the properties of sequences in different numbered exons......
+
+
+For this example, we could probably get it to run quickly by finding all the exons in a single pass and writing them to 10 different output files, see the examples below on extending for hints. 
 
 ## Extending localgb to do something different. 
 
