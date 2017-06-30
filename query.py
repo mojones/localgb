@@ -6,6 +6,7 @@ import argparse
 import re
 import logging
 import gzip
+import time
 
 
 # hide gb file warnings, don't do this in production
@@ -18,7 +19,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--output',  help='output file', required=True)
 
 parser.add_argument(
-    "-v", "--verbosity", action="count", help="show lots of debugging output"
+    "-v", "--verbosity", action="count", help="show lots of debugging output", default=0
 )
 
 parser.add_argument(
@@ -109,7 +110,7 @@ if args.verbosity is None:
 elif args.verbosity > 0:
     logging.basicConfig(level=logging.DEBUG)
 
-
+#@profile
 def myreadlines(f, newline):
   buf = ""
   while True:
@@ -123,6 +124,18 @@ def myreadlines(f, newline):
       break
     buf += chunk
 
+def delimited(file, delimiter='\n', bufsize=4096):
+    buf = ''
+    while True:
+        newbuf = file.read(bufsize)
+        if not newbuf:
+            yield buf
+            return
+        buf += newbuf
+        lines = buf.split(delimiter)
+        for line in lines[:-1]:
+            yield line
+        buf = lines[-1]
 
 def long_substr(data):
     if len(data) == 1:
@@ -207,20 +220,29 @@ if args.taxid_file is not None:
 matching_record_count = 0
 matching_feature_count = 0
 
-filenames = tqdm(args.files, unit='files')
-with open(args.output, 'w') as output_file:
-    for filename in filenames:
-        filenames.set_description(
-            'processing {}'.format(os.path.basename(filename))
+
+def doit():
+    filenames = tqdm(args.files, unit='files')
+    with open(args.output, 'w') as output_file:
+        for filename in filenames:
+            start = time.time()
+            filenames.set_description(
+                'processing {}, found {} ({}) matching features (records)'
+                .format(os.path.basename(filename), matching_feature_count, matching_record_count)
+            )
+            if filename.endswith('.gz'):
+                genbank_file = gzip.open(filename, mode="rt", encoding='latin-1')
+            else:
+                genbank_file = open(filename, encoding='latin-1')
+
+            for record in delimited(genbank_file, '\n//\n', bufsize=4096*256):
+                process_record(record, output_file, taxid_set)
+            if args.verbosity > 0:
+                logging.debug("{} took {} seconds".format(
+                filename, time.time() - start
+                ))
+
+    print('found {} matching features in {} records'.format(
+        matching_feature_count, matching_record_count)
         )
-        if filename.endswith('.gz'):
-            genbank_file = gzip.open(filename, mode="rt")
-        else:
-            genbank_file = open(filename)
-        for record in myreadlines(genbank_file, '\n//\n'):
-            process_record(record, output_file, taxid_set)
-
-
-print('found {} matching features in {} records'.format(
-    matching_feature_count, matching_record_count)
-    )
+doit()
