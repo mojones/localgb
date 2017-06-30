@@ -115,4 +115,4 @@ elif args.verbosity > 0:
 
 
 
-localgb.do_search(process_record_function=localgb.process_record, args=args)
+localgb.do_search(args)

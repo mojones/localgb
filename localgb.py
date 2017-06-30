@@ -305,11 +305,12 @@ matching_feature_count = 0
 
 output_file = None
 
-def do_search(process_record_function, args):
+def do_search(args):
 
     global longest_substring
     global taxid_set
     global output_file
+
 
     # figure out what the cheap check is
     if args.terms is None and args.qualifier is None:
@@ -338,11 +339,12 @@ def do_search(process_record_function, args):
 
 
 
-    filenames = tqdm(args.files, unit='files')
     output_file = open(args.output, 'w')
-    for filename in filenames:
+
+    filenames_pbar = tqdm(args.files, unit='files')
+    for filename in filenames_pbar:
         start = time.time()
-        filenames.set_description(
+        filenames_pbar.set_description(
             'processing {}, found {} ({}) matching features (records)'
             .format(os.path.basename(filename), matching_feature_count, matching_record_count)
         )
@@ -352,13 +354,31 @@ def do_search(process_record_function, args):
             genbank_file = open(filename, encoding='latin-1')
 
         for record in delimited(genbank_file, '\n//\n', bufsize=4096*256):
-            process_record_function(record, args)
+            process_record(record, args)
         if args.verbosity > 0:
             logging.debug("{} took {} seconds".format(
             filename, time.time() - start
             ))
-    output_file.close()
+        output_file.close()
 
     print('found {} matching features in {} records'.format(
         matching_feature_count, matching_record_count)
         )
+
+def do_search_generic(process_record_function, filenames):
+
+
+    filenames_pbar = tqdm(filenames, unit='files')
+    for filename in filenames_pbar:
+        filenames_pbar.set_description(
+            'processing {}'
+            .format(os.path.basename(filename))
+        )
+        if filename.endswith('.gz'):
+            genbank_file = gzip.open(filename, mode="rt", encoding='latin-1')
+        else:
+            genbank_file = open(filename, encoding='latin-1')
+
+        for record in delimited(genbank_file, '\n//\n', bufsize=4096*256):
+            if record != '': # sometimes we get empty records
+                process_record_function(record)
