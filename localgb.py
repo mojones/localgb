@@ -8,6 +8,7 @@ import pickle
 import collections
 import time
 from Bio import SeqIO
+import re
 
 
 def need_to_update_release():
@@ -233,7 +234,7 @@ def long_substr(data):
                     substr = data[0][i:i+j]
     return substr
 
-def process_record(record, args):
+def process_record(record, args, output_file):
     global matching_record_count
     global matching_feature_count
 
@@ -303,13 +304,11 @@ taxid_set = None
 matching_record_count = 0
 matching_feature_count = 0
 
-output_file = None
 
 def do_search(args):
 
     global longest_substring
     global taxid_set
-    global output_file
 
 
     # figure out what the cheap check is
@@ -319,7 +318,7 @@ def do_search(args):
         longest_substring = args.qualifier.lower()
     else:
         if len(args.terms) == 1:
-            longest_term_substring = args.terms[0]
+            longest_term_substring = args.terms[0].lower()
         else:
             longest_term_substring = long_substr(args.terms).lower()
 
@@ -354,12 +353,12 @@ def do_search(args):
             genbank_file = open(filename, encoding='latin-1')
 
         for record in delimited(genbank_file, '\n//\n', bufsize=4096*256):
-            process_record(record, args)
+            process_record(record, args, output_file)
         if args.verbosity > 0:
             logging.debug("{} took {} seconds".format(
             filename, time.time() - start
             ))
-        output_file.close()
+    output_file.close()
 
     print('found {} matching features in {} records'.format(
         matching_feature_count, matching_record_count)
