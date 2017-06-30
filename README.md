@@ -112,7 +112,9 @@ So, a complete command line will look like this...
 
 ```
 # search for records containing enolase coding sequences and write the resulting records to enolase.gb
+# takes 8 minutes for INV on an ec2 t2.medium
 python query.py --type CDS --qualifier product --terms enolase --output enolase.gb --files *.seq --dump-genbank
+
 ```
 While the query is running we get a similar progress bar to the download stage so we can estimate how long it's going to take.
 
