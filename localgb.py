@@ -112,6 +112,8 @@ def build_ncbi_nodes_dicts():
 def get_taxdump():
     logging.debug('starting download taxdump')
     logging.info('downloading taxonomy dump...')
+    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+    ftp.login()
     ftp.cwd('/pub/taxonomy')
 
     for filename, file_info in ftp.mlsd():

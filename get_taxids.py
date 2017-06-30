@@ -111,7 +111,8 @@ parser.add_argument(
     '--exclude',
         nargs='+',
         type=int,
-    help="space-separated list of taxids who's descendents we want to exclude"
+    help="space-separated list of taxids who's descendents we want to exclude",
+	default=[]
     )
 
 parser.add_argument(
