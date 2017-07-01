@@ -88,7 +88,7 @@ I am looking for records that have a **CDS** feature, where that feature has a *
 ```
 ... rest of the genbank fil e...
 
-CDS             join(<1..100,165..311,373..463,532..>631)
+CDS             473..776
       /gene="Eno"
       /codon_start=1
       /product="enolase"
