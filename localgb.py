@@ -9,6 +9,7 @@ import collections
 import time
 from Bio import SeqIO
 import re
+import gzip
 
 
 def need_to_update_release():
